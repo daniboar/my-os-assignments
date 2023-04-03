@@ -117,7 +117,7 @@ int main(int argc, char **argv)
                     //list_it(argv[3]+5, 0, argv[2]+13);
                 }
             }
-            if(strcmp(argv[2], "recursive") == 0){// daca vrem listare recursiva doar
+            if(strcmp(argv[2], "recursive") == 0){// daca vrem listare recursiva doar si recursive este al 3 lea argument 
                     if(strstr(argv[3], "path=") - argv[3] == 0 ){
                         printf("SUCCESS\n");
                         list_rec(argv[3]+5, 0, 0);
@@ -135,6 +135,14 @@ int main(int argc, char **argv)
                         }
                     }
             
+            }
+            else if(strstr(argv[2], "name_starts_with=") != NULL){ // daca avem "/list name_start_with recursive..."
+                if(strcmp(argv[3], "recursive") == 0){
+                    if(strstr(argv[4], "path=") - argv[4] == 0 ){
+                            printf("SUCCESS\n");
+                            list_rec(argv[4]+5, argv[2]+17, 0);
+                        }
+                }
             }
         
         }  
