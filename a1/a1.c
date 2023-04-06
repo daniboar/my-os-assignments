@@ -287,7 +287,9 @@ int main(int argc, char **argv)
                     {
                         printf("SUCCESS\n");
                         list_rec(argv[3]+5, 0, 0);
+                        closedir(dir);
                     }
+
                 }
                 else if(strstr(argv[3], "name_starts_with=") != NULL) // daca e recursiv si avem "name starts with.."
                 {
@@ -304,6 +306,7 @@ int main(int argc, char **argv)
                         {
                             printf("SUCCESS\n");
                             list_rec(argv[4]+5, argv[3]+17, 0);
+                            closedir(dir);
                         }
                     }
                 }
@@ -322,6 +325,7 @@ int main(int argc, char **argv)
                         {
                             printf("SUCCESS\n");
                             list_rec(argv[4]+5, 0, argv[3]+13);
+                            closedir(dir);
                         }
                     }
                 }
@@ -344,6 +348,7 @@ int main(int argc, char **argv)
                         {
                             printf("SUCCESS\n");
                             list_rec(argv[4]+5, argv[2]+17, 0);
+                            closedir(dir);
                         }
 
                     }
@@ -366,6 +371,7 @@ int main(int argc, char **argv)
                         {
                             printf("SUCCESS\n");
                             list_rec(argv[4]+5, 0, argv[2]+13);
+                            closedir(dir);
                         }
                     }
                 }
