@@ -6,6 +6,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdbool.h>
 
 
 void list_it(const char *path, const char *name, const char *size)
@@ -83,6 +84,11 @@ void list_rec(const char *path, const char *name, const char *size)
     struct stat statbuf;
 
     dir = opendir(path);
+    if(dir == NULL)
+    {
+        printf("ERROR\ninvalid directory path");
+        return;
+    }
 
 
     if(name != NULL && size == 0)
@@ -157,7 +163,7 @@ void parse(const char* path)
     int fd = open(path, O_RDONLY);
     if(fd == -1)
     {
-        perror("Could not open inpun file");
+        perror("Invalid directory path\n");
         return;
     }
 
@@ -228,21 +234,120 @@ void parse(const char* path)
     close(fd);
 }
 
+bool SF_good(const char *path)
+{
+    char MAGIC; // magic = 8
+    short HEADER_SIZE;
+    int VERSION; // version = [36,128]
+    char NO_OF_SECTION; // [4,19]
+
+    char SECT_NAME[13];
+    short SECT_TYPE; // 26 sau 98
+
+    int fd = open(path, O_RDONLY);
+    if(fd == -1)
+    {
+        return false;
+    }
+
+    read(fd, &MAGIC, sizeof(MAGIC)); //citim magic si verificam daca a fost citit bine
+    if(MAGIC != '8')
+    {
+        close(fd);
+        return false;
+    }
+
+    read(fd, &HEADER_SIZE, sizeof(HEADER_SIZE)); //citim header size
+
+    read(fd, &VERSION, sizeof(VERSION)); //citim version si verificam daca a fost citit bine
+    if(VERSION < 36 || VERSION > 128)
+    {
+        close(fd);
+        return false;
+    }
+
+    read(fd, &NO_OF_SECTION, sizeof(NO_OF_SECTION));
+    if(NO_OF_SECTION < 4 || NO_OF_SECTION > 19)
+    {
+        close(fd);
+        return false;
+    }
+
+    for(int i = 0; i < NO_OF_SECTION; i++)
+    {
+        read(fd, SECT_NAME, 12); // citim numele si il adaugam in matricea de caractere
+        SECT_NAME[12] = '\0';
+
+        read(fd, &SECT_TYPE, sizeof(SECT_TYPE)); // citim tipul si verificam daca a fost citit bine
+        if(SECT_TYPE != 26 && SECT_TYPE != 98)
+        {
+            close(fd);
+            return false;
+        }
+    }
+    close(fd);
+    return true;  //returez true daca fisierul SF este un fisier valid
+}
+
+
 void findall(const char *path)
 {
-    // DIR *dir = NULL;
-    // //struct dirent *entry = NULL;
-    // //char fullPath[512];
-    // //struct stat statbuf;
+    DIR *dir = NULL;
+    struct dirent *entry = NULL;
+    char fullPath[512];
+    struct stat statbuf;
 
-    // dir = opendir(path);
-    // if(dir == NULL)
-    // {
-    //     printf("ERROR\ninvalid directory path");
-    //     return;
-    // }
+    char NO_OF_SECTION; // [4,19]
+    int SECT_SIZE;
+    int cnt = 0;
+    dir = opendir(path);
 
-    // closedir(dir);
+    while((entry = readdir(dir)) != NULL)
+    {
+        if(strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)
+        {
+            snprintf(fullPath, 512, "%s/%s", path, entry->d_name);
+            if(lstat(fullPath, &statbuf) == 0)
+            {
+                if(S_ISREG(statbuf.st_mode))
+                {
+                    int fd = open(path, O_RDONLY);
+                    if(fd == -1)
+                    {
+                        perror("invalid directory path\n");
+                        return;
+                    }
+                    if(SF_good(path) == true)
+                    {
+                        read(fd, &NO_OF_SECTION, sizeof(NO_OF_SECTION));
+                        cnt =0;
+                        for(int i =0; i<NO_OF_SECTION; i++)
+                        {
+                            read(fd, &SECT_SIZE, sizeof(SECT_SIZE));
+                            if(SECT_SIZE > 1417)
+                            {
+                                cnt++;
+                            }
+                        }
+                        if(cnt != 0)
+                        {
+                            close(fd);
+                        }
+                    }
+                    else
+                    {
+                        close(fd);
+                    }
+                    printf("%s\n", fullPath);
+                    close(fd);
+                }
+                if(S_ISDIR(statbuf.st_mode))
+                    findall(fullPath);
+            }
+        }
+    }
+
+    closedir(dir);
 }
 
 int main(int argc, char **argv)
@@ -388,7 +493,21 @@ int main(int argc, char **argv)
         if(strcmp(argv[1], "findall") == 0)  // daca vrem sa facem findall
         {
             if(strstr(argv[2], "path=") - argv[2] == 0)
-                findall(argv[2]+5);
+            {
+                DIR *dir = NULL;
+                dir = opendir(argv[2]+5);
+                if(dir == NULL)
+                {
+                    printf("ERROR\ninvalid directory path\n");
+                    closedir(dir);
+                }
+                else
+                {
+                    printf("SUCCESS\n");
+                    findall(argv[2]+5);
+                    closedir(dir);
+                }
+            }
         }
     }
     return 0;
