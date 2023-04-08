@@ -413,8 +413,18 @@ void extract(const char *path, const char* section, const char* line){
     
     int j = 0;
     int cnt = 1;
+    int cnt2 = 1;
+    for(int i = strlen(string1) - 1; i >= 0; i--){
+        if(string1[i] == 10 || string1[i] == EOF){
+            cnt2++;}
+    }
 
-    for(int i = strlen(string1) - 1; i > 0; i--){
+    if(linie > cnt2 || linie < 0){
+        printf("ERROR\ninvalid line\n");
+        return;
+    }
+
+    for(int i = strlen(string1) - 1; i >= 0; i--){
         if(string1[i] == 10 || string1[i] == EOF)
             cnt++;
         if(cnt == linie){
@@ -424,7 +434,7 @@ void extract(const char *path, const char* section, const char* line){
     }
     string2[j] = '\0';
     printf("SUCCESS\n");
-    for(int i = strlen(string2) - 1; i > 0; i--)
+    for(int i = strlen(string2) - 1; i >= 0; i--)
         printf("%c", string2[i]);
     }
     printf("\n");
