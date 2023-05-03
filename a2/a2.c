@@ -3,11 +3,48 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include "a2_helper.h"
+#include <pthread.h>
+#include <semaphore.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+
+typedef struct {
+ int threadNr;
+ int procesNr;
+ sem_t *logSem;
+ } TH_STRUCT;
+
+void *thread_function2(void *p){
+    int threadNr = (*(int*)p);
+    info(BEGIN, 2, threadNr);
+    info(END, 2, threadNr);
+    return NULL;    
+}
+
+void *thread_function3(void *p){
+    int threadNr = (*(int*)p);
+    info(BEGIN, 3, threadNr);
+    info(END, 3, threadNr);
+     return NULL;    
+}
+
+void *thread_function7(void *p){
+    int threadNr = (*(int*)p);
+    info(BEGIN, 7, threadNr);
+    info(END, 7, threadNr);
+    return NULL;    
+}
 
 int main()
 {
     init();
     pid_t P2, P3, P4, P5, P6, P7, P8, P9;
+    pthread_t tids3[5];
+    int params3[5];
+    pthread_t tids7[46];
+    int params7[46];
+    pthread_t tids2[6];
+    int params2[6];
     info(BEGIN, 1, 0);
 
     //ramura cu p2,p5,p6,p9
@@ -15,6 +52,14 @@ int main()
     if(P2 == 0)
     {
         info(BEGIN, 2, 0);
+        for(int i = 0; i < 6; i++){
+                    params2[i] = i + 1;
+                    pthread_create(&tids2[i], NULL, thread_function2, &params2[i]);        
+             }
+             for(int i = 0; i < 6 ;i++){
+                 pthread_join(tids2[i], NULL);
+             }
+
         P5 = fork(); //process p5, copilul lui P2
         if(P5 == 0)
         {
@@ -55,6 +100,14 @@ int main()
         if(P3 == 0)
         {
             info(BEGIN, 3, 0);
+             for(int i = 0; i < 5; i++){
+                    params3[i] = i + 1;
+                    pthread_create(&tids3[i], NULL, thread_function3, &params3[i]);        
+             }
+             for(int i = 0; i < 5 ;i++){
+                 pthread_join(tids3[i], NULL);
+             }
+            
             P4 = fork(); // proces P4, copilul lui p3
             if(P4 == 0)
             {
@@ -73,6 +126,13 @@ int main()
             if(P7 == 0)
             {
                 info(BEGIN, 7, 0);
+                for(int i = 0; i < 46; i++){
+                    params7[i] = i + 1;
+                    pthread_create(&tids7[i], NULL, thread_function7, &params7[i]);        
+             }
+             for(int i = 0; i < 46 ;i++){
+                 pthread_join(tids7[i], NULL);
+             }
                 info(END, 7, 0);
             }
             else
@@ -94,8 +154,6 @@ int main()
             }
         }
     }
-
-
 
     return 0;
 }
